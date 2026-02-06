@@ -21,16 +21,35 @@ export default function SetupPage() {
     setMessage(null)
 
     const formData = new FormData(e.currentTarget)
+    const email = formData.get('email') as string
+    const password = formData.get('password') as string
+    const fullName = formData.get('full_name') as string
+
+    console.log('[v0] Submitting setup form:', { email, fullName })
     
     try {
-      const result = await setupMasterAccount(formData)
+      // Gunakan API route yang menggunakan service role (bypass rate limit!)
+      const response = await fetch('/api/create-master', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email,
+          password,
+          fullName,
+        }),
+      })
+
+      const result = await response.json()
+      console.log('[v0] API response:', result)
       
       if (result.error) {
         setMessage({ type: 'error', text: result.error })
       } else {
         setMessage({ 
           type: 'success', 
-          text: 'Akun master berhasil dibuat! Mengalihkan ke halaman login...' 
+          text: result.message || 'Akun master berhasil dibuat! Silakan login.' 
         })
         
         // Redirect ke login setelah 2 detik
@@ -38,10 +57,11 @@ export default function SetupPage() {
           router.push('/auth/login')
         }, 2000)
       }
-    } catch (error) {
+    } catch (error: any) {
+      console.error('[v0] Setup error:', error)
       setMessage({ 
         type: 'error', 
-        text: 'Terjadi kesalahan saat membuat akun' 
+        text: error.message || 'Terjadi kesalahan saat membuat akun' 
       })
     } finally {
       setLoading(false)
