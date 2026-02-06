@@ -1,176 +1,130 @@
 'use client'
 
-import React from "react"
-
 import { useState } from 'react'
-import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Shield, CheckCircle2, AlertCircle } from 'lucide-react'
-import { createClient } from '@/lib/supabase/client'
+import { setupMasterAccount } from './actions'
 import { useRouter } from 'next/navigation'
 
 export default function SetupPage() {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [fullName, setFullName] = useState('')
-  const [phone, setPhone] = useState('')
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [success, setSuccess] = useState(false)
+  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
   const router = useRouter()
 
-  const handleCreateMaster = async (e: React.FormEvent) => {
+  async function handleSetup(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     setLoading(true)
-    setError(null)
-    setSuccess(false)
+    setMessage(null)
 
+    const formData = new FormData(e.currentTarget)
+    
     try {
-      const supabase = createClient()
-
-      // Create user with Master role in metadata
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            full_name: fullName,
-            phone: phone || null,
-            role: 'master', // Set role in metadata
-          },
-          emailRedirectTo: `${window.location.origin}/dashboard`,
-        },
-      })
-
-      if (authError) throw authError
-
-      if (authData.user) {
-        // Wait a bit for the trigger to create profile
-        await new Promise(resolve => setTimeout(resolve, 2000))
-
-        // Update the profile role to master using service role
-        const { error: updateError } = await supabase
-          .from('profiles')
-          .update({ role: 'master' })
-          .eq('id', authData.user.id)
-
-        if (updateError) {
-          console.log('[v0] Profile update error:', updateError)
-          // Continue anyway, the role is set in metadata
-        }
-
-        setSuccess(true)
+      const result = await setupMasterAccount(formData)
+      
+      if (result.error) {
+        setMessage({ type: 'error', text: result.error })
+      } else {
+        setMessage({ 
+          type: 'success', 
+          text: 'Akun master berhasil dibuat! Mengalihkan ke halaman login...' 
+        })
         
-        // Redirect to login after 2 seconds
+        // Redirect ke login setelah 2 detik
         setTimeout(() => {
-          router.push('/auth/login?message=Master account created. Please login.')
+          router.push('/auth/login')
         }, 2000)
       }
-    } catch (err: any) {
-      setError(err.message || 'Failed to create master account')
+    } catch (error) {
+      setMessage({ 
+        type: 'error', 
+        text: 'Terjadi kesalahan saat membuat akun' 
+      })
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-muted/30 px-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 p-4">
       <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <div className="flex items-center justify-center mb-4">
-            <div className="flex items-center justify-center size-16 rounded-full bg-accent/10">
-              <Shield className="size-8 text-accent" />
+        <CardHeader className="text-center space-y-2">
+          <div className="flex items-center justify-center mb-2">
+            <div className="flex items-center justify-center size-16 rounded-full bg-primary/10">
+              <Shield className="size-8 text-primary" />
             </div>
           </div>
-          <CardTitle className="text-2xl">{'Initial Setup'}</CardTitle>
+          <CardTitle className="text-2xl font-bold">Setup Akun Master</CardTitle>
           <CardDescription>
-            {'Create your Master admin account to get started'}
+            Buat akun master pertama untuk mengakses dashboard admin
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {success ? (
-            <Alert className="bg-green-50 border-green-200">
-              <CheckCircle2 className="size-4 text-green-600" />
-              <AlertDescription className="text-green-800">
-                {'Master account created successfully! Redirecting to login...'}
-              </AlertDescription>
-            </Alert>
-          ) : (
-            <form onSubmit={handleCreateMaster} className="space-y-4">
-              {error && (
-                <Alert variant="destructive">
+          <form onSubmit={handleSetup} className="space-y-4">
+            {message && (
+              <Alert variant={message.type === 'error' ? 'destructive' : 'default'} className={message.type === 'success' ? 'bg-green-50 border-green-200' : ''}>
+                {message.type === 'success' ? (
+                  <CheckCircle2 className="size-4 text-green-600" />
+                ) : (
                   <AlertCircle className="size-4" />
-                  <AlertDescription>{error}</AlertDescription>
-                </Alert>
-              )}
+                )}
+                <AlertDescription className={message.type === 'success' ? 'text-green-800' : ''}>
+                  {message.text}
+                </AlertDescription>
+              </Alert>
+            )}
 
-              <div className="space-y-2">
-                <Label htmlFor="email">{'Email'}</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="admin@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  disabled={loading}
-                />
-              </div>
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                name="email"
+                type="email"
+                placeholder="master@admin.com"
+                required
+                disabled={loading}
+              />
+            </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="password">{'Password'}</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  minLength={6}
-                  disabled={loading}
-                />
-                <p className="text-sm text-muted-foreground">
-                  {'Minimum 6 characters'}
-                </p>
-              </div>
+            <div className="space-y-2">
+              <Label htmlFor="password">Password</Label>
+              <Input
+                id="password"
+                name="password"
+                type="password"
+                placeholder="Minimal 6 karakter"
+                required
+                minLength={6}
+                disabled={loading}
+              />
+            </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="fullName">{'Full Name'}</Label>
-                <Input
-                  id="fullName"
-                  type="text"
-                  placeholder="Master Admin"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  required
-                  disabled={loading}
-                />
-              </div>
+            <div className="space-y-2">
+              <Label htmlFor="full_name">Nama Lengkap</Label>
+              <Input
+                id="full_name"
+                name="full_name"
+                type="text"
+                placeholder="Master Admin"
+                required
+                disabled={loading}
+              />
+            </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="phone">{'Phone (Optional)'}</Label>
-                <Input
-                  id="phone"
-                  type="tel"
-                  placeholder="+62 812 3456 7890"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  disabled={loading}
-                />
-              </div>
+            <Button type="submit" className="w-full" disabled={loading}>
+              {loading ? 'Membuat Akun...' : 'Buat Akun Master'}
+            </Button>
 
-              <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? 'Creating Master Account...' : 'Create Master Account'}
-              </Button>
-
-              <div className="text-center text-sm text-muted-foreground">
-                {'This page should only be used for initial setup'}
-              </div>
-            </form>
-          )}
+            <div className="text-center text-sm text-muted-foreground">
+              Sudah punya akun?{' '}
+              <a href="/auth/login" className="text-primary hover:underline">
+                Login di sini
+              </a>
+            </div>
+          </form>
         </CardContent>
       </Card>
     </div>
