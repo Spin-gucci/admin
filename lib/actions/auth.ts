@@ -30,7 +30,7 @@ export async function signUp(formData: FormData) {
   })
 
   if (error) {
-    return { error: error.message }
+    redirect(`/auth/sign-up?error=${encodeURIComponent(error.message)}`)
   }
 
   // Update profile with phone if provided
@@ -41,8 +41,22 @@ export async function signUp(formData: FormData) {
       .eq('id', data.user.id)
   }
 
+  // Get user profile to determine role and redirect
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', data.user.id)
+    .single()
+
   revalidatePath('/', 'layout')
-  return { success: true, message: 'Check your email to confirm your account' }
+  
+  // Redirect to appropriate dashboard based on role
+  if (profile?.role) {
+    const route = getDashboardRoute(profile.role)
+    redirect(route)
+  } else {
+    redirect('/dashboard')
+  }
 }
 
 export async function signIn(formData: FormData) {
@@ -51,19 +65,14 @@ export async function signIn(formData: FormData) {
   const email = formData.get('email') as string
   const password = formData.get('password') as string
 
-  console.log('[v0] Attempting login for:', email)
-
   const { data, error } = await supabase.auth.signInWithPassword({
     email,
     password,
   })
 
   if (error) {
-    console.log('[v0] Login error:', error.message)
     redirect(`/auth/login?error=${encodeURIComponent(error.message)}`)
   }
-
-  console.log('[v0] Login successful, user ID:', data.user.id)
 
   // Get user profile to determine role
   const { data: profile, error: profileError } = await supabase
@@ -73,18 +82,14 @@ export async function signIn(formData: FormData) {
     .single()
 
   if (profileError) {
-    console.log('[v0] Profile error:', profileError.message)
     redirect('/dashboard')
   }
-
-  console.log('[v0] User role:', profile?.role)
 
   revalidatePath('/', 'layout')
   
   // Redirect to appropriate dashboard based on role
   if (profile?.role) {
     const route = getDashboardRoute(profile.role)
-    console.log('[v0] Redirecting to:', route)
     redirect(route)
   } else {
     redirect('/dashboard')

@@ -1,7 +1,8 @@
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import Link from 'next/link'
-import { Shield, Users, TrendingUp, Lock } from 'lucide-react'
+import { Shield, Users, TrendingUp, Lock, Crown } from 'lucide-react'
 
 export default function HomePage() {
   return (
@@ -27,6 +28,26 @@ export default function HomePage() {
             <Button asChild variant="outline" size="lg" className="bg-transparent">
               <Link href="/auth/sign-up">{'Get Started'}</Link>
             </Button>
+          </div>
+          
+          {/* Master Setup Alert */}
+          <div className="mt-12 max-w-2xl mx-auto">
+            <Alert className="bg-amber-50 border-amber-200 dark:bg-amber-950 dark:border-amber-800">
+              <Crown className="size-4 text-amber-600 dark:text-amber-400" />
+              <AlertTitle className="text-amber-900 dark:text-amber-100">
+                {'Setting up for the first time?'}
+              </AlertTitle>
+              <AlertDescription className="text-amber-800 dark:text-amber-200">
+                {'Need to create a Master admin account? '}
+                <Link href="/setup-master" className="font-medium underline hover:no-underline">
+                  {'Click here for easy setup'}
+                </Link>
+                {' or check the '}
+                <Link href="https://github.com/Spin-gucci/admin/blob/main/TROUBLESHOOTING.md" className="font-medium underline hover:no-underline" target="_blank" rel="noopener noreferrer">
+                  {'troubleshooting guide'}
+                </Link>
+              </AlertDescription>
+            </Alert>
           </div>
         </div>
       </section>

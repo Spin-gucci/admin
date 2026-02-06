@@ -2,6 +2,19 @@
 
 ## Cara Mudah Login Sebagai Master
 
+### ⚠️ PENTING: Disable Email Confirmation (Jika Diperlukan)
+
+Jika Anda tidak bisa login setelah mendaftar, kemungkinan email confirmation masih aktif. Ikuti langkah ini:
+
+1. **Buka Supabase Dashboard**
+2. **Klik "Authentication" di menu kiri**
+3. **Klik tab "Providers"**
+4. **Klik "Email" provider**
+5. **Scroll ke bawah dan MATIKAN "Confirm email"**
+6. **Klik "Save"**
+
+Setelah ini, pengguna baru bisa langsung login tanpa konfirmasi email.
+
 ### Metode 1: Setup Cepat (RECOMMENDED)
 
 1. **Buka halaman setup:**
@@ -16,7 +29,7 @@
    Phone: +62 812 3456 7890 (opsional)
    ```
 
-3. **Klik "Create Account"**
+3. **Klik "Create Master Account"**
 
 4. **Setelah akun dibuat, Anda akan melihat SQL query:**
    ```sql
@@ -83,8 +96,22 @@ Anda akan memiliki akses ke:
 
 ## Troubleshooting
 
-### "Tidak bisa login"
+### "Email not confirmed" atau "Tidak ada tindakan setelah mendaftar"
+**SOLUSI UTAMA:**
+1. Buka Supabase Dashboard
+2. Pergi ke Authentication > Providers > Email
+3. **MATIKAN "Confirm email"**
+4. Save dan coba daftar ulang dengan email berbeda
+
+**ALTERNATIF:** Jika ingin tetap menggunakan email confirmation:
+1. Cek inbox email Anda (termasuk folder spam)
+2. Klik link konfirmasi dari Supabase
+3. Setelah konfirmasi, jalankan SQL query untuk upgrade ke master
+4. Baru bisa login
+
+### "Tidak bisa login" atau "Invalid login credentials"
 - Pastikan email dan password benar
+- Pastikan sudah konfirmasi email (jika email confirmation aktif)
 - Pastikan query SQL sudah dijalankan di Supabase
 - Coba logout dan login kembali
 - Clear browser cache
@@ -92,9 +119,11 @@ Anda akan memiliki akses ke:
 ### "Role tidak berubah"
 - Pastikan query SQL berhasil dijalankan
 - Cek di Supabase Dashboard > Table Editor > profiles
+- Pastikan kolom `role` berubah menjadi `master`
 - Logout dan login kembali untuk refresh session
 
 ### "Error saat membuat akun"
 - Pastikan password minimal 6 karakter
 - Pastikan email belum terdaftar
 - Cek koneksi internet dan Supabase status
+- Pastikan email confirmation sudah dimatikan (lihat solusi di atas)

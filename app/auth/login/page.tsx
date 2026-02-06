@@ -3,9 +3,9 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
-import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import Link from 'next/link'
-import { Lock, AlertCircle } from 'lucide-react'
+import { Lock, AlertCircle, Info } from 'lucide-react'
 
 export default async function LoginPage({
   searchParams,
@@ -64,12 +64,30 @@ export default async function LoginPage({
             <Button type="submit" className="w-full">
               {'Sign In'}
             </Button>
-            <p className="text-sm text-center text-muted-foreground">
-              {'Don\'t have an account? '}
-              <Link href="/auth/sign-up" className="text-accent hover:underline font-medium">
-                {'Sign up'}
-              </Link>
-            </p>
+            <Alert className="bg-blue-50 border-blue-200 dark:bg-blue-950 dark:border-blue-800">
+              <Info className="size-4 text-blue-600 dark:text-blue-400" />
+              <AlertTitle className="text-blue-900 dark:text-blue-100">{'Setup Master Account'}</AlertTitle>
+              <AlertDescription className="text-blue-800 dark:text-blue-200 text-xs">
+                {'Need to create a master admin? '}
+                <Link href="/setup-master" className="font-medium underline hover:no-underline">
+                  {'Click here'}
+                </Link>
+              </AlertDescription>
+            </Alert>
+            <div className="space-y-2">
+              <p className="text-sm text-center text-muted-foreground">
+                {'Don\'t have an account? '}
+                <Link href="/auth/sign-up" className="text-accent hover:underline font-medium">
+                  {'Sign up'}
+                </Link>
+              </p>
+              <p className="text-xs text-center text-muted-foreground">
+                {'Having login issues? '}
+                <Link href="/debug-auth" className="text-accent hover:underline font-medium">
+                  {'Check debug page'}
+                </Link>
+              </p>
+            </div>
           </CardFooter>
         </form>
       </Card>
